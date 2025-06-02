@@ -1,119 +1,207 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🎁 រង្វាន់របស់អ្នក</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f9f9f9;
-    text-align: center;
-    padding: 40px 20px;
-  }
-  .spinner {
-    margin: 20px auto;
-    width: 60px;
-    height: 60px;
-    border: 6px solid #ccc;
-    border-top-color: #1e90ff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin {
-    100% { transform: rotate(360deg); }
-  }
-
-  .reward-image {
-    margin: 20px auto;
-    max-width: 300px;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    display: none;
-  }
-
-  .btn {
-    display: inline-block;
-    background-color: #1e90ff;
-    color: white;
-    padding: 15px 35px;
-    font-size: 20px;
-    border-radius: 12px;
-    margin-top: 20px;
-    text-decoration: none;
-  }
-
-  .celebrate-icon {
-    font-size: 50px;
-    opacity: 0;
-    animation: popUp 0.6s ease forwards;
-  }
-
-  @keyframes popUp {
-    0% { transform: translateY(20px); opacity: 0; }
-    50% { transform: translateY(-10px); opacity: 1; }
-    100% { transform: translateY(0); }
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>ប្រអប់រង្វាន់</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #001f3f;
+      font-family: 'Khmer OS Siemreap', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      overflow: hidden;
+    }
+    .container {
+      text-align: center;
+    }
+    .instruction {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      animation: bounceText 2s infinite;
+    }
+    input {
+      padding: 10px;
+      font-size: 20px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 20px;
+      width: 300px;
+      text-align: center;
+    }
+    @keyframes bounceText {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    #gift-box {
+      font-size: 100px;
+      cursor: pointer;
+      transition: transform 0.4s;
+      animation: pulseGift 1s infinite;
+    }
+    @keyframes pulseGift {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    #countdown {
+      font-size: 24px;
+      color: yellow;
+      margin-top: 20px;
+    }
+    #reward {
+      margin-top: 30px;
+      display: none;
+    }
+    #reward img {
+      max-width: 300px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px 10px #00bfff;
+    }
+    #reward-text {
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 20px;
+      color: #00ffea;
+    }
+    #reward-name {
+      font-size: 28px;
+      font-weight: bold;
+      color: #ffeb3b;
+      margin-top: 15px;
+    }
+    #try-again {
+      display: none;
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 20px;
+      border: none;
+      border-radius: 12px;
+      background: #00bfff;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
+<div class="container">
+  <div class="instruction">បញ្ចូល <b>Telegram Username</b> របស់អ្នក</div>
+  <input type="text" id="telegram-id" placeholder="ឧ. @yourusername">
+  <div class="instruction">សូមចុចលើប្រអប់ 🎁</div>
+  <div id="gift-box">🎁</div>
+  <div id="countdown"></div>
 
-<h1>🎁 រង្វាន់របស់អ្នក</h1>
-<div class="spinner" id="spinner"></div>
-<p id="status-text">កំពុងរំពឹងរង្វាន់របស់អ្នក...</p>
+  <div id="reward">
+    <a href="https://mg.emoney.com.kh:8686/mg/eweb/LuckyOceanAppBanner_websitebanner.jpg" target="_blank">
+      <img src="https://mg.emoney.com.kh:8686/mg/eweb/LuckyOceanAppBanner_websitebanner.jpg" alt="Reward Image">
+    </a>
+    <div id="reward-name">🎁 រង្វាន់៖ កាតទឹកប្រាក់ $10</div>
+    <div id="reward-text">អ្នកឈ្នះរង្វាន់!</div>
+  </div>
 
-<div id="celebrate" style="height:60px;"></div>
+  <button id="try-again">លេងម្ដងទៀត</button>
+</div>
 
-<img id="reward-img" class="reward-image" src="" alt="រង្វាន់" />
-<a href="https://t.me/your_group_invite_link" target="_blank" class="btn" id="join-btn" style="display:none;">ចូលក្រុម</a>
-
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
-  const rewards = [
-    { name: "📱 iPhone 16", img: "https://i.imgur.com/KTJlEMC.jpg" },
-    { name: "🏍️ ម៉ូតូ", img: "https://i.imgur.com/fis0Ldc.jpg" },
-    { name: "🚗 ឡាន", img: "https://i.imgur.com/Dv56FxP.jpg" },
-    { name: "💵 លុយ", img: "https://i.imgur.com/hRQcB1T.jpg" }
-  ];
+  const giftBox = document.getElementById("gift-box");
+  const instruction = document.querySelectorAll(".instruction")[1];
+  const countdown = document.getElementById("countdown");
+  const reward = document.getElementById("reward");
+  const tryAgain = document.getElementById("try-again");
 
-  const spinner = document.getElementById("spinner");
-  const rewardImg = document.getElementById("reward-img");
-  const statusText = document.getElementById("status-text");
-  const celebrateDiv = document.getElementById("celebrate");
-  const joinBtn = document.getElementById("join-btn");
+  const telegramInput = document.getElementById("telegram-id");
+  const BOT_TOKEN = "PASTE_YOUR_BOT_TOKEN_HERE"; // 🔁 ប្ដូរតំណនេះជាផ្ទាល់
 
-  let countdown = 5;
-  const timer = setInterval(() => {
-    countdown--;
-    if (countdown > 0) {
-      statusText.textContent = `⏳ សូមរង់ចាំ... ${countdown} វិនាទី`;
-    } else {
-      clearInterval(timer);
-      spinner.style.display = "none";
-      startRewardLoop();
+  let dotPhase = 0;
+  let dotTimer;
+  let mainTimer;
+
+  function showDots() {
+    const dots = [".", "..", "..."];
+    dotTimer = setInterval(() => {
+      instruction.textContent = "ត្រៀម" + dots[dotPhase % 3];
+      dotPhase++;
+    }, 500);
+  }
+
+  function stopDots() {
+    clearInterval(dotTimer);
+  }
+
+  function launchConfetti() {
+    const duration = 3000;
+    const end = Date.now() + duration;
+    const interval = setInterval(() => {
+      if (Date.now() > end) return clearInterval(interval);
+      confetti({ particleCount: 40, spread: 360, origin: { x: Math.random(), y: Math.random() - 0.2 } });
+    }, 250);
+  }
+
+  function sendTelegramReward(username) {
+    const message = "🎉 អបអរសាទរ! អ្នកទទួលបានរង្វាន់: កាតទឹកប្រាក់ $10 🎁";
+
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: username,
+        text: message
+      })
+    }).then(res => res.json()).then(data => {
+      if (!data.ok) {
+        alert("❌ មិនអាចផ្ញើរទៅ Telegram Username នេះបានទេ។ បើសិនមិនទាន់ចាប់ផ្ដើម Bot សូមចុច /start ជាមុន។");
+      }
+    }).catch(err => {
+      alert("មានបញ្ហាក្នុងការផ្ញើសារ Telegram");
+      console.error(err);
+    });
+  }
+
+  function reset() {
+    instruction.textContent = "សូមចុចលើប្រអប់ 🎁";
+    giftBox.style.display = "block";
+    countdown.textContent = "";
+    reward.style.display = "none";
+    tryAgain.style.display = "none";
+  }
+
+  giftBox.addEventListener("click", () => {
+    const username = telegramInput.value.trim();
+    if (!username || !username.startsWith("@")) {
+      return alert("សូមបញ្ចូល Telegram Username (ឧ. @yourusername) មុនចុច!");
     }
-  }, 1000);
 
-  function startRewardLoop() {
-    joinBtn.style.display = "inline-block";
-    let i = 0;
-    showReward(i);
-    setInterval(() => {
-      i = (i + 1) % rewards.length;
-      showReward(i);
-    }, 4000);
-  }
+    giftBox.style.pointerEvents = "none";
+    showDots();
+    let timeLeft = 20;
+    countdown.textContent = `⏳ សូមរង់ចាំ ${timeLeft} វិនាទី...`;
 
-  function showReward(index) {
-    const reward = rewards[index];
-    rewardImg.src = reward.img;
-    rewardImg.alt = reward.name;
-    rewardImg.style.display = "block";
-    statusText.textContent = `🎉 ${reward.name}`;
+    mainTimer = setInterval(() => {
+      timeLeft--;
+      countdown.textContent = `⏳ សូមរង់ចាំ ${timeLeft} វិនាទី...`;
+      if (timeLeft <= 0) {
+        clearInterval(mainTimer);
+        stopDots();
+        instruction.textContent = "អបអរសាទរ!";
+        giftBox.style.display = "none";
+        countdown.textContent = "";
+        reward.style.display = "block";
+        tryAgain.style.display = "inline-block";
+        launchConfetti();
+        sendTelegramReward(username);
+      }
+    }, 1000);
+  });
 
-    // Add animated 🎉 icon
-    celebrateDiv.innerHTML = `<div class="celebrate-icon">🎉</div>`;
-  }
+  tryAgain.addEventListener("click", () => {
+    reset();
+    giftBox.style.pointerEvents = "auto";
+  });
 </script>
-
 </body>
 </html>
