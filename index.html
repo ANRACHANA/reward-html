@@ -1,207 +1,189 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-  <meta charset="UTF-8">
-  <title>ប្រអប់រង្វាន់</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Invoice ទឹក-ភ្លើង with Firebase Firestore</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #001f3f;
-      font-family: 'Khmer OS Siemreap', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      overflow: hidden;
-    }
-    .container {
-      text-align: center;
-    }
-    .instruction {
-      font-size: 32px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      animation: bounceText 2s infinite;
-    }
-    input {
-      padding: 10px;
-      font-size: 20px;
-      border-radius: 8px;
-      border: none;
-      margin-bottom: 20px;
-      width: 300px;
-      text-align: center;
-    }
-    @keyframes bounceText {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    #gift-box {
-      font-size: 100px;
-      cursor: pointer;
-      transition: transform 0.4s;
-      animation: pulseGift 1s infinite;
-    }
-    @keyframes pulseGift {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-    }
-    #countdown {
-      font-size: 24px;
-      color: yellow;
-      margin-top: 20px;
-    }
-    #reward {
-      margin-top: 30px;
-      display: none;
-    }
-    #reward img {
-      max-width: 300px;
-      border-radius: 20px;
-      box-shadow: 0 0 30px 10px #00bfff;
-    }
-    #reward-text {
-      font-size: 32px;
-      font-weight: bold;
-      margin-top: 20px;
-      color: #00ffea;
-    }
-    #reward-name {
-      font-size: 28px;
-      font-weight: bold;
-      color: #ffeb3b;
-      margin-top: 15px;
-    }
-    #try-again {
-      display: none;
-      margin-top: 30px;
-      padding: 10px 20px;
-      font-size: 20px;
-      border: none;
-      border-radius: 12px;
-      background: #00bfff;
-      color: white;
-      cursor: pointer;
-    }
+    body { font-family: 'Khmer OS Battambang', sans-serif; margin: 10px; background: #f5f7fa; max-width: 700px; margin-left: auto; margin-right: auto;}
+    label, input, select, button { width: 100%; margin-top: 10px; font-size: 16px; }
+    input, select { padding: 8px; border-radius: 6px; border: 1.5px solid #ccc; box-sizing: border-box; }
+    button { padding: 12px; background: #1e88e5; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 16px; }
+    button:hover { background: #1565c0; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: center; }
+    th { background: #1e88e5; color: white; }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="instruction">បញ្ចូល <b>Telegram Username</b> របស់អ្នក</div>
-  <input type="text" id="telegram-id" placeholder="ឧ. @yourusername">
-  <div class="instruction">សូមចុចលើប្រអប់ 🎁</div>
-  <div id="gift-box">🎁</div>
-  <div id="countdown"></div>
 
-  <div id="reward">
-    <a href="https://mg.emoney.com.kh:8686/mg/eweb/LuckyOceanAppBanner_websitebanner.jpg" target="_blank">
-      <img src="https://mg.emoney.com.kh:8686/mg/eweb/LuckyOceanAppBanner_websitebanner.jpg" alt="Reward Image">
-    </a>
-    <div id="reward-name">🎁 រង្វាន់៖ កាតទឹកប្រាក់ $10</div>
-    <div id="reward-text">អ្នកឈ្នះរង្វាន់!</div>
-  </div>
+<h2>Invoice ទឹក-ភ្លើង</h2>
 
-  <button id="try-again">លេងម្ដងទៀត</button>
-</div>
+<label>តម្លៃទឹក (រៀល/យូនីត)</label>
+<input type="number" id="water-price" value="3000" />
 
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<label>តម្លៃភ្លើង (រៀល/គីឡូវ៉ាត់)</label>
+<input type="number" id="electric-price" value="4000" />
+
+<label>បន្ទប់</label>
+<select id="room">
+  <option value="">-- ជ្រើសបន្ទប់ --</option>
+  <option value="1">បន្ទប់ ១</option>
+  <option value="2">បន្ទប់ ២</option>
+  <option value="3">បន្ទប់ ៣</option>
+  <option value="4">បន្ទប់ ៤</option>
+</select>
+
+<label>ខែ</label>
+<input type="month" id="month" />
+
+<label>ឈ្មោះអតិថិជន</label>
+<input type="text" id="customer-name" placeholder="បញ្ចូលឈ្មោះអតិថិជន" />
+
+<label>លេខទូរស័ព្ទ</label>
+<input type="tel" id="customer-phone" placeholder="បញ្ចូលលេខទូរស័ព្ទ" />
+
+<label>ទឹកចាស់</label>
+<input type="number" id="water-old" />
+<label>ទឹកថ្មី</label>
+<input type="number" id="water-new" />
+<label>ភ្លើងចាស់</label>
+<input type="number" id="electric-old" />
+<label>ភ្លើងថ្មី</label>
+<input type="number" id="electric-new" />
+
+<button onclick="saveData()">រក្សាទុក</button>
+
+<h3>ទិន្នន័យវិក្កយបត្រ</h3>
+<label>បង្ហាញតែបន្ទប់:</label>
+<select id="filter-room" onchange="loadData()">
+  <option value="">-- បង្ហាញទាំងអស់ --</option>
+  <option value="1">បន្ទប់ ១</option>
+  <option value="2">បន្ទប់ ២</option>
+  <option value="3">បន្ទប់ ៣</option>
+  <option value="4">បន្ទប់ ៤</option>
+</select>
+
+<table>
+  <thead>
+    <tr><th>បន្ទប់</th><th>ខែ</th><th>អតិថិជន</th><th>លេខទូរស័ព្ទ</th><th>លេខវិក្កយបត្រ</th></tr>
+  </thead>
+  <tbody id="data-tbody"></tbody>
+</table>
+
 <script>
-  const giftBox = document.getElementById("gift-box");
-  const instruction = document.querySelectorAll(".instruction")[1];
-  const countdown = document.getElementById("countdown");
-  const reward = document.getElementById("reward");
-  const tryAgain = document.getElementById("try-again");
+  // Your Firebase config here
+  const firebaseConfig = {
+    apiKey: "AIzaSyBt_ScEi_StJ0wQDP-gZwMWmy5A7HqEcXE",
+    authDomain: "invoice-77616.firebaseapp.com",
+    projectId: "invoice-77616",
+    storageBucket: "invoice-77616.appspot.com",
+    messagingSenderId: "91579214593",
+    appId: "1:91579214593:web:eca7aad598915de58ec900",
+    measurementId: "G-99K8KQ02M0"
+  };
 
-  const telegramInput = document.getElementById("telegram-id");
-  const BOT_TOKEN = "PASTE_YOUR_BOT_TOKEN_HERE"; // 🔁 ប្ដូរតំណនេះជាផ្ទាល់
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-  let dotPhase = 0;
-  let dotTimer;
-  let mainTimer;
-
-  function showDots() {
-    const dots = [".", "..", "..."];
-    dotTimer = setInterval(() => {
-      instruction.textContent = "ត្រៀម" + dots[dotPhase % 3];
-      dotPhase++;
-    }, 500);
+  function generateInvoiceNumber(room, month) {
+    const ym = month.replace('-', '');
+    const randomSuffix = Math.floor(Math.random() * 900 + 100); // random 3 digit
+    return `INV-${ym}-${room}-${randomSuffix}`;
   }
 
-  function stopDots() {
-    clearInterval(dotTimer);
-  }
+  async function saveData() {
+    const room = document.getElementById('room').value;
+    const month = document.getElementById('month').value;
+    const waterOld = parseInt(document.getElementById('water-old').value);
+    const waterNew = parseInt(document.getElementById('water-new').value);
+    const electricOld = parseInt(document.getElementById('electric-old').value);
+    const electricNew = parseInt(document.getElementById('electric-new').value);
+    const customerName = document.getElementById('customer-name').value.trim();
+    const customerPhone = document.getElementById('customer-phone').value.trim();
 
-  function launchConfetti() {
-    const duration = 3000;
-    const end = Date.now() + duration;
-    const interval = setInterval(() => {
-      if (Date.now() > end) return clearInterval(interval);
-      confetti({ particleCount: 40, spread: 360, origin: { x: Math.random(), y: Math.random() - 0.2 } });
-    }, 250);
-  }
-
-  function sendTelegramReward(username) {
-    const message = "🎉 អបអរសាទរ! អ្នកទទួលបានរង្វាន់: កាតទឹកប្រាក់ $10 🎁";
-
-    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: username,
-        text: message
-      })
-    }).then(res => res.json()).then(data => {
-      if (!data.ok) {
-        alert("❌ មិនអាចផ្ញើរទៅ Telegram Username នេះបានទេ។ បើសិនមិនទាន់ចាប់ផ្ដើម Bot សូមចុច /start ជាមុន។");
-      }
-    }).catch(err => {
-      alert("មានបញ្ហាក្នុងការផ្ញើសារ Telegram");
-      console.error(err);
-    });
-  }
-
-  function reset() {
-    instruction.textContent = "សូមចុចលើប្រអប់ 🎁";
-    giftBox.style.display = "block";
-    countdown.textContent = "";
-    reward.style.display = "none";
-    tryAgain.style.display = "none";
-  }
-
-  giftBox.addEventListener("click", () => {
-    const username = telegramInput.value.trim();
-    if (!username || !username.startsWith("@")) {
-      return alert("សូមបញ្ចូល Telegram Username (ឧ. @yourusername) មុនចុច!");
+    if (!room || !month || isNaN(waterOld) || isNaN(waterNew) || isNaN(electricOld) || isNaN(electricNew) || !customerName || !customerPhone) {
+      alert('សូមបំពេញទិន្នន័យទាំងអស់');
+      return;
     }
 
-    giftBox.style.pointerEvents = "none";
-    showDots();
-    let timeLeft = 20;
-    countdown.textContent = `⏳ សូមរង់ចាំ ${timeLeft} វិនាទី...`;
+    const invoiceNo = generateInvoiceNumber(room, month);
 
-    mainTimer = setInterval(() => {
-      timeLeft--;
-      countdown.textContent = `⏳ សូមរង់ចាំ ${timeLeft} វិនាទី...`;
-      if (timeLeft <= 0) {
-        clearInterval(mainTimer);
-        stopDots();
-        instruction.textContent = "អបអរសាទរ!";
-        giftBox.style.display = "none";
-        countdown.textContent = "";
-        reward.style.display = "block";
-        tryAgain.style.display = "inline-block";
-        launchConfetti();
-        sendTelegramReward(username);
+    try {
+      await db.collection('invoices').doc(invoiceNo).set({
+        room,
+        month,
+        waterOld,
+        waterNew,
+        electricOld,
+        electricNew,
+        customerName,
+        customerPhone,
+        invoiceNo,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      alert('✅ បានរក្សាទុកទៅ Firebase!');
+      loadData();
+      clearForm();
+    } catch (error) {
+      alert('❌ កំហុស: ' + error.message);
+    }
+  }
+
+  async function loadData() {
+    const tbody = document.getElementById('data-tbody');
+    tbody.innerHTML = '';
+    const filterRoom = document.getElementById('filter-room').value;
+
+    let query = db.collection('invoices').orderBy('timestamp', 'desc');
+
+    if (filterRoom) {
+      query = query.where('room', '==', filterRoom);
+    }
+
+    try {
+      const snapshot = await query.get();
+      if (snapshot.empty) {
+        tbody.innerHTML = `<tr><td colspan="5">មិនមានទិន្នន័យ</td></tr>`;
+        return;
       }
-    }, 1000);
-  });
 
-  tryAgain.addEventListener("click", () => {
-    reset();
-    giftBox.style.pointerEvents = "auto";
-  });
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${d.room}</td>
+          <td>${d.month}</td>
+          <td>${d.customerName}</td>
+          <td>${d.customerPhone}</td>
+          <td>${d.invoiceNo}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (error) {
+      alert('❌ កំហុសក្នុងការទាញទិន្នន័យ: ' + error.message);
+    }
+  }
+
+  function clearForm() {
+    document.getElementById('room').value = '';
+    document.getElementById('month').value = '';
+    document.getElementById('water-old').value = '';
+    document.getElementById('water-new').value = '';
+    document.getElementById('electric-old').value = '';
+    document.getElementById('electric-new').value = '';
+    document.getElementById('customer-name').value = '';
+    document.getElementById('customer-phone').value = '';
+  }
+
+  window.onload = loadData;
 </script>
+
 </body>
 </html>
