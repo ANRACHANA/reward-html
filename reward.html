@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Invoice ទឹក-ភ្លើង with Firebase Firestore</title>
+  <title>វិក្កយបត្រទឹក-ភ្លើង</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -11,441 +14,1248 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <style>
-    body {
-      font-family: 'Khmer OS Battambang', sans-serif;
-      margin: 10px;
-      background: #f5f7fa;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-      padding-bottom: 50px;
-    }
-    label, input, select, button {
-      width: 100%;
-      margin-top: 10px;
-      font-size: 16px;
-    }
-    input, select {
-      padding: 8px;
-      border-radius: 6px;
-      border: 1.5px solid #ccc;
-      box-sizing: border-box;
-    }
-    button {
-      padding: 12px;
-      background: #1e88e5;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 20px;
-      font-size: 16px;
-    }
-    button:hover {
-      background: #1565c0;
-    }
-    table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-    th, td {
-      padding: 8px;
-      border: 1px solid #ccc;
-      text-align: center;
-    }
-    th {
-      background: #1e88e5;
-      color: white;
-    }
-    .total {
-      font-weight: bold;
-      background-color: #e3f2fd;
-    }
-    .grand-total {
-      font-weight: bold;
-      text-align: right;
-      margin-top: 20px;
-      font-size: 16px;
-      color: #2e7d32;
-    }
-    #login-section, #app-section {
-      margin-top: 20px;
-    }
-    #login-section input {
-      margin-bottom: 10px;
-    }
-    .hidden {
-      display: none;
-    }
+ /* Reset និង Box sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
-    /* Mobile responsive */
-    @media (max-width: 480px) {
-      body {
-        padding: 5px;
-      }
-      button, input, select, label {
-        font-size: 14px;
-      }
-      th, td {
-        font-size: 12px;
-        padding: 6px;
-      }
-    }
-  </style>
+/* Body និង Font */
+body {
+  font-family: 'Khmer OS Battambang', sans-serif;
+  background: #f4f6f9;
+  max-width: 720px;
+  margin: 20px auto;
+  padding: 10px;
+  color: #2c3e50;
+}
+
+/* Pointer cursor for clickable items */
+.pointer {
+  cursor: pointer;
+}
+
+/* Modal pre */
+.modal-content pre {
+  font-family: 'Khmer OS Battambang', Arial, sans-serif;
+  font-size: 16px;
+  white-space: pre-wrap;
+}
+
+/* Side menu styles */
+#menu-toggle {
+  position: fixed;
+  top: 5px;
+  left: 15px;
+  background: #0d6efd;
+  color: white;
+  border: none;
+  font-size: 24px;
+  padding: 1px 15px;
+  border-radius: 6px;
+  z-index: 1050;
+  display: none;
+  cursor: pointer;
+}
+
+.side-menu {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1040;
+  top: 10px;
+  left: 5px;
+  background-color: white;
+  overflow-x: hidden;
+  transition: 0.3s;
+  padding-top: 20px;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+}
+
+.side-menu a {
+  padding: 12px 24px;
+  text-decoration: none;
+  font-size: 18px;
+  color: #333;
+  display: block;
+  transition: background-color 0.3s ease;
+}
+
+.side-menu a:hover {
+  background-color: #e3f2fd;
+}
+
+.menu-header {
+  text-align: center;
+  padding: 2px 10px 10px;
+  background-color: #0d6efd;
+  color: white;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+}
+
+/* Responsive for menu */
+@media (max-width: 720px) {
+  #menu-toggle {
+    display: block;
+  }
+  .menu-buttons {
+    display: none;
+  }
+}
+
+@media (min-width: 721px) {
+  #menu-toggle, .side-menu {
+    display: none !important;
+  }
+  .menu-buttons {
+    display: flex !important;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+}
+
+/* Login card */
+#login-card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 15px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Password toggle */
+.password-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+/* Error message */
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* Loading overlay */
+#loading-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 9999;
+}
+
+.overlay-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.overlay-content {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Overlay */
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 998;
+  display: none;
+}
+
+/* Edit customer card */
+#edit-customer-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  padding: 25px 30px;
+  margin-top: 20px;
+  font-family: 'Khmer OS Battambang', sans-serif;
+  color: #2c3e50;
+}
+
+#edit-customer-card h3 {
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 25px;
+  color: #0d6efd;
+  text-align: center;
+}
+
+#edit-customer-card label {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 6px;
+  color: #34495e;
+}
+
+#edit-customer-card .form-select,
+#edit-customer-card .form-control {
+  border: 1.5px solid #ced4da;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+}
+
+#edit-customer-card .form-select:focus,
+#edit-customer-card .form-control:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 6px rgba(13,110,253,0.4);
+}
+
+/* Save button */
+#save-customer-btn {
+  background-color: #0d6efd;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 8px rgba(13,110,253,0.3);
+}
+
+#save-customer-btn:hover:not(:disabled) {
+  background-color: #084cdf;
+  box-shadow: 0 6px 12px rgba(8,76,223,0.5);
+}
+
+#save-customer-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+/* Filter room select */
+#filter-room-select {
+  max-width: 220px;
+  margin: 20px auto 10px;
+  display: block;
+  border-radius: 6px;
+  border: 1.5px solid #ced4da;
+  padding: 8px 12px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+#filter-room-select:focus,
+#filter-room-select:hover {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 6px rgba(13,110,253,0.4);
+}
+
+/* Filter message */
+#filter-message {
+  font-weight: 700;
+  color: #27ae60;
+  margin: 10px 0;
+  text-align: center;
+  font-size: 1.1rem;
+  display: none;
+}
+
+/* Table styling */
+.table {
+  border-collapse: separate;
+  border-spacing: 0 12px;
+  width: 100%;
+  font-size: 1rem;
+  color: #444;
+}
+
+.table thead th {
+  background-color: #e9f0ff;
+  color: #0d6efd;
+  font-weight: 600;
+  padding: 12px 15px;
+  border-radius: 8px 8px 0 0;
+  text-align: center;
+  border-bottom: none;
+}
+
+.table tbody tr {
+  background-color: #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  transition: background-color 0.25s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #dbeafe; /* light blue background on hover */
+}
+
+.table tbody tr td {
+  padding: 12px 15px;
+  text-align: center;
+  border: none;
+  vertical-align: middle;
+}
+
+/* Delete button */
+.btn-danger {
+  background-color: #e74c3c;
+  border: none;
+  padding: 6px 14px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-danger:hover {
+  background-color: #b02a24;
+  box-shadow: 0 2px 6px rgba(176,42,36,0.5);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  #edit-customer-card {
+    padding: 15px 20px;
+  }
+
+  #save-customer-btn {
+    max-width: 100%;
+  }
+
+  .table thead th,
+  .table tbody tr td {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+}
+
+</style>
+
+
+
+
+
+
+
+
+
+
+
 </head>
 <body>
 
-<h2>Invoice ទឹក-ភ្លើង</h2>
 
-<!-- Login/Register Section -->
-<div id="login-section">
-  <h3>ចូល / ចុះឈ្មោះ</h3>
-  <input type="email" id="email" placeholder="អ៊ីម៉ែល" />
-  <input type="password" id="password" placeholder="ពាក្យសម្ងាត់" />
-  <button onclick="login()">ចូល</button>
-  <button onclick="register()">ចុះឈ្មោះ</button>
-  <p id="login-msg" style="color:red;"></p>
+
+
+<!-- Menu Toggle Button -->
+<button id="menu-toggle" class="btn btn-primary" onclick="toggleMenu()">☰</button>
+
+<!-- Side Drawer Menu -->
+<div id="side-menu" class="side-menu">
+  <div class="menu-header">
+ 
+    <div id="user-email" style="margin-top: 5px; font-size: 12px;"></div>
+  </div>
+  <hr />
+  <a href="#" onclick="toggleView('form'); toggleMenu()">➕ បញ្ចូលវិក្កយបត្រ</a>
+  <a href="#" onclick="toggleView('history'); toggleMenu()">📋 ប្រវត្តិវិក្កយបត្រ</a>
+
+  <a href="#" onclick="toggleView('edit-customer'); toggleMenu()">👤 កែប្រែអតិថិជន</a>
+
+
+  <a href="#" onclick="logout()">🚪 ចេញ</a>
+</div>
+<div id="overlay"></div>
+
+
+
+
+
+
+
+
+
+
+
+<!-- Login Card -->
+<div class="card p-4" id="login-card" style="font-family: 'Khmer OS Battambang', sans-serif; max-width: 400px; margin: auto;">
+  <h2 class="text-center mb-3">📥 វិកាយប័ត្រ-ទឹក ភ្លើង</h2>
+
+  <!-- Email -->
+  <input type="email" id="email" class="form-control mb-2" placeholder="អ៊ីម៉ែល" />
+
+  <!-- Password + Eye -->
+  <div class="mb-3 position-relative">
+    <input type="password" id="password" class="form-control pe-5" placeholder="ពាក្យសម្ងាត់" />
+    <span id="toggle-eye" onclick="togglePassword()" class="position-absolute end-0 top-50 translate-middle-y me-3" style="cursor: pointer;">
+      👁️
+    </span>
+  </div>
+
+  <!-- Login Button -->
+  <button id="login-btn" class="btn btn-primary w-100 mb-2" onclick="login()">🔐 ចូល</button>
+
+  <!-- Register Button -->
+  <button class="btn btn-outline-secondary w-100" onclick="register()">📋 បង្កើតគណនី</button>
+
+  <!-- Error + Timer -->
+  <p id="login-error" style="color:red; min-height:1.5em; margin-top: 0.5em;"></p>
+  <p id="lock-timer" style="color:orange; font-weight: bold; min-height:1.5em;"></p>
 </div>
 
-<!-- Main App Section (hidden initially) -->
-<div id="app-section" class="hidden">
-  <button style="background:#e53935; margin-bottom:15px;" onclick="logout()">ចាកចេញ</button>
 
-  <label>តម្លៃទឹក (រៀល/យូនីត)</label>
-  <input type="number" id="water-price" value="3000" />
 
-  <label>តម្លៃភ្លើង (រៀល/គីឡូវ៉ាត់)</label>
-  <input type="number" id="electric-price" value="4000" />
 
-  <label>បន្ទប់</label>
-  <select id="room">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Main Content Card -->
+<div class="card p-4" id="form-card" style="display: none;">
+  
+  <!-- Buttons menu -->
+  <div class="menu-buttons mb-3 justify-content-center">
+    <button type="button" class="btn btn-primary my-3" onclick="toggleView('form')">➕ បញ្ចូលវិក្កយបត្រ</button>
+    <button type="button" class="btn btn-success my-3" onclick="toggleView('history')">📋 ប្រវត្តិ</button>
+
+  <button class="btn btn-primary my-3" onclick="loadCustomerList('edit-customer')">បង្ហាញអតិថិជន</button>
+
+  <button type="button" class="btn btn-outline-danger my-3"onclick="logout()">ចាក់ចេញ</button>
+  </div>
+
+  <!-- Form View -->
+  <div id="form-view">
+    <h3 class="mb-4 text-center">បញ្ចូលវិក្កយបត្រ</h3>
+    <form id="invoice-form" onsubmit="event.preventDefault(); saveData();">
+
+      <div class="mb-3">
+        <label for="month" class="form-label">ខែ</label>
+        <input type="month" id="month" class="form-control" />
+      </div>
+
+      <div class="mb-3">
+  <label for="room" class="form-label">បន្ទប់</label>
+  <select id="room" class="form-select" onchange="autoFillCustomerInfo()">
     <option value="">-- ជ្រើសបន្ទប់ --</option>
-    <option value="1">បន្ទប់ ១</option>
-    <option value="2">បន្ទប់ ២</option>
-    <option value="3">បន្ទប់ ៣</option>
-    <option value="4">បន្ទប់ ៤</option>
+    <option value="1">បន្ទប់ 1</option>
+    <option value="2">បន្ទប់ 2</option>
+    <option value="3">បន្ទប់ 3</option>
+    <option value="4">បន្ទប់ 4</option>
   </select>
-
-  <label>ខែ</label>
-  <input type="month" id="month" />
-
-  <label>ឈ្មោះអតិថិជន</label>
-  <input type="text" id="customer-name" placeholder="បញ្ចូលឈ្មោះអតិថិជន" />
-
-  <label>លេខទូរស័ព្ទ</label>
-  <input type="tel" id="customer-phone" placeholder="បញ្ចូលលេខទូរស័ព្ទ" />
-
-  <label>ទឹកចាស់</label>
-  <input type="number" id="water-old" />
-  <label>ទឹកថ្មី</label>
-  <input type="number" id="water-new" />
-  <label>ភ្លើងចាស់</label>
-  <input type="number" id="electric-old" />
-  <label>ភ្លើងថ្មី</label>
-  <input type="number" id="electric-new" />
-
-  <button onclick="saveData()">រក្សាទុក</button>
-
-  <h3>ប្រវត្តិវិក្កយបត្រ</h3>
-  <label>បង្ហាញតែបន្ទប់:</label>
-  <select id="filter-room" onchange="loadData()">
-    <option value="">-- បង្ហាញទាំងអស់ --</option>
-    <option value="1">បន្ទប់ ១</option>
-    <option value="2">បន្ទប់ ២</option>
-    <option value="3">បន្ទប់ ៣</option>
-    <option value="4">បន្ទប់ ៤</option>
-  </select>
-
-  <table>
-    <thead>
-      <tr>
-        <th>លេខវិក្កយបត្រ</th>
-        <th>អតិថិជន</th>
-        <th>បន្ទប់</th>
-        <th>ខែ</th>
-        <th>កាលបរិច្ឆេទ</th>
-        <th>បោះពុម្ព</th>
-      </tr>
-    </thead>
-    <tbody id="history-tbody"></tbody>
-  </table>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="water-old" class="form-label">ទឹកចាស់</label>
+          <input type="number" id="water-old" class="form-control" min="0" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="water-new" class="form-label">ទឹកថ្មី</label>
+          <input type="number" id="water-new" class="form-control" min="0" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="electric-old" class="form-label">ភ្លើងចាស់</label>
+          <input type="number" id="electric-old" class="form-control" min="0" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="electric-new" class="form-label">ភ្លើងថ្មី</label>
+          <input type="number" id="electric-new" class="form-control" min="0" />
+        </div>
+      </div>
+
+
+
+ <div class="mb-3" style="background-color: #e0f7fa; padding: 1px; border-radius: 1px;">
+  <label for="customer-name" class="form-label">ឈ្មោះអតិថិជន</label>
+  <input type="text" id="customer-name" class="form-control" readonly style="background-color: #b2ebf2;" />
+</div>
+
+<div class="mb-3" style="background-color: #e0f7fa; padding: 1px; border-radius: 1px;">
+  <label for="customer-phone" class="form-label">លេខទូរស័ព្ទ</label>
+  <input type="text" id="customer-phone" class="form-control" readonly style="background-color: #b2ebf2;" />
+</div>
+
+
+
+
+
+
+
+<div class="d-grid gap-2 ">
+         <button id="save-btn" onclick="saveData()" style="width:100%; padding:10px; font-size:12px; border:none; border-radius:12px; background:#1e88e5; color:white;">💾 រក្សាទុក</button>
+         <button  type="button" class="btn btn-outline-danger btn-justify-content-center" onclick="resetForm()" style="width:100%; padding:12px; font-size:12px; border:none; border-radius:6px; ">♻️ កំណត់ឡើងវិញ</button>
+
+      </div>
+
+    </form>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!-- History View -->
+  <div id="history-view" style="display: none;">
+    <h3 class="mb-4 text-center">📋 ប្រវត្តិវិក្កយបត្រ</h3>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <label for="filter-room" class="form-label">Filter បន្ទប់</label>
+        <select id="filter-room" class="form-select">
+          <option value="">-- ទាំងអស់ --</option>
+          <option value="1">បន្ទប់ ១</option>
+          <option value="2">បន្ទប់ ២</option>
+          <option value="3">បន្ទប់ ៣</option>
+          <option value="4">បន្ទប់ ៤</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label for="filter-month" class="form-label">Filter ខែ</label>
+        <input type="month" id="filter-month" class="form-control" />
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <button class="btn btn-primary w-100" onclick="loadData()">🔍 ស្វែងរក</button>
+      </div>
+    </div>
+
+    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+      <table class="table table-bordered table-hover align-middle text-center">
+        <thead class="table-primary sticky-top">
+          <tr>
+            <th>វិក្កយបត្រ</th>
+            <th>អតិថិជន</th>
+            <th>បន្ទប់</th>
+            <th>ខែ</th>
+            <th>ថ្ងៃ</th>
+            <th>សកម្មភាព</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div id="invoice-modal" class="modal" tabindex="-1" style="display:none; background-color: rgba(0,0,0,0.5); position: fixed; z-index: 1100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-4">
+      <button type="button" class="btn-close float-end" aria-label="Close" onclick="closeModal()"></button>
+      <pre id="modal-content"></pre>
+      <button class="btn btn-success w-100 mt-3" onclick="printModalContent()">🖨️ បោះពុម្ព</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- Edit Customer Section -->
+<div class="card p-4" id="edit-customer-card" style="display: none;">
+  <h3 class="mb-4 text-center">👤 កែប្រែឈ្មោះអតិថិជនតាមបន្ទប់</h3>
+
+  <div class="mb-3">
+    <label for="edit-room" class="form-label">ជ្រើសបន្ទប់</label>
+    <select id="edit-room" class="form-select" onchange="loadCustomerInfo()">
+      <option value="">-- ជ្រើសបន្ទប់ --</option>
+      <option value="1">បន្ទប់ 1</option>
+      <option value="2">បន្ទប់ 2</option>
+      <option value="3">បន្ទប់ 3</option>
+      <option value="4">បន្ទប់ 4</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="edit-customer-name" class="form-label">ឈ្មោះអតិថិជន</label>
+    <input type="text" id="edit-customer-name" class="form-control" />
+  </div>
+
+  <div class="mb-3">
+    <label for="edit-customer-phone" class="form-label">លេខទូរស័ព្ទ</label>
+    <input type="text" id="edit-customer-phone" class="form-control" />
+  </div>
+
+ <button class="btn btn-success d-flex align-items-center justify-content-center gap-2" id="save-customer-btn" onclick="updateCustomer()">
+  <span class="spinner-border spinner-border-sm d-none" id="save-spinner" role="status" aria-hidden="true"></span>
+  <span id="save-btn-text">💾 បញ្ចូល / កែប្រែ</span>
+</button>
+ <!-- Customer Table -->
+  <label for="filter-room-select" class="form-label">ជ្រើសបន្ទប់សម្រាប់ស្វែងរក</label>
+<select id="filter-room-select" class="form-select" onchange="filterByRoomSelect()">
+  <option value="">-- បង្ហាញគ្រប់បន្ទប់ --</option>
+  <option value="1">បន្ទប់ 1</option>
+  <option value="2">បន្ទប់ 2</option>
+  <option value="3">បន្ទប់ 3</option>
+  <option value="4">បន្ទប់ 4</option>
+</select>
+<div id="filter-message" style="text-align:center; margin:10px 0; font-weight:bold; color:green; display:none;">
+  គ្នាន
+</div>
+  <!-- Customer Table -->
+  <div class="card p-1 mt-4" id="customer-list-card">
+    <h4 class="mb-2 text-center">បញ្ជីអតិថិជន</h4>
+    <div class="table-responsive">
+      <table class="table table-bordered text-center">
+        <thead class="table-light">
+          <tr>
+            <th>បន្ទប់</th>
+            <th>ឈ្មោះអតិថិជន</th>
+            <th>លេខទូរស័ព្ទ</th>
+            <th>សកម្មភាព</th> <!-- For delete/edit -->
+          </tr>
+        </thead>
+        <tbody id="customer-table-body">
+          <!-- Rows will be populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" style="display: none;">
+  <div class="overlay-bg"></div>
+  <div class="overlay-content">
+    <div class="spinner"></div>
+    <div class="mt-3 text-white fs-5">⏳ កំពុងដំណើរការ....</div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+ 
 
 <script>
-  // Firebase Config
-  const firebaseConfig = {
-    apiKey: "AIzaSyBt_ScEi_StJ0wQDP-gZwMWmy5A7HqEcXE",
-    authDomain: "invoice-77616.firebaseapp.com",
-    projectId: "invoice-77616",
-    storageBucket: "invoice-77616.appspot.com",
-    messagingSenderId: "91579214593",
-    appId: "1:91579214593:web:eca7aad598915de58ec900",
-    measurementId: "G-99K8KQ02M0"
-  };
+// ===== Firebase Config & Init =====
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyD61vUNw4gFmzR4zfS8s7FVIzsJe9nXQHQ",
+  authDomain: "home-invoice-e1f43.firebaseapp.com",
+  projectId: "home-invoice-e1f43",
+  storageBucket: "home-invoice-e1f43.firebasestorage.app",
+  messagingSenderId: "243294137874",
+  appId: "1:243294137874:web:8bdc0aab16ca58f4d932cb",
+  measurementId: "G-86XF4PCKG6"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+// ===== Global Variables =====
+let loginAttempts = 0;
+const maxLoginAttempts = 5;
+const lockSeconds = 60;
 
-  // Show/hide sections
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      document.getElementById('login-section').classList.add('hidden');
-      document.getElementById('app-section').classList.remove('hidden');
-      loadData();
+// ===== UI Helpers =====
+function toggleView(view) {
+  document.getElementById('form-view').style.display = (view === 'form') ? 'block' : 'none';
+  document.getElementById('history-view').style.display = (view === 'history') ? 'block' : 'none';
+  document.getElementById('edit-customer-card').style.display = (view === 'edit-customer') ? 'block' : 'none';
+
+  if(view === 'form') resetForm();
+
+  if(view === 'history') {
+    loadData();  // បន្ថែមនេះដើម្បីបញ្ចូលទិន្នន័យភ្លាមៗ
+  }
+  
+  if (view === 'edit-customer') {
+    loadCustomerList();
+    clearEditCustomerForm();
+  }
+}
+
+
+function toggleMenu() {
+  const menu = document.getElementById('side-menu');
+  const overlay = document.getElementById('overlay');
+  if (menu.style.width === '250px') {
+    menu.style.width = '0';
+    overlay.style.display = 'none';
+  } else {
+    menu.style.width = '250px';
+    overlay.style.display = 'block';
+  }
+}
+
+document.getElementById('overlay').onclick = toggleMenu;
+
+function showLoading(show) {
+  document.getElementById('loading-overlay').style.display = show ? 'block' : 'none';
+}
+
+// ===== Login System =====
+function togglePassword() {
+  const input = document.getElementById('password');
+  const eye = document.getElementById('toggle-eye');
+  if (input.type === 'password') {
+    input.type = 'text';
+    eye.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    eye.textContent = '👁️';
+  }
+}
+
+function lockLogin() {
+  const btn = document.getElementById('login-btn');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const timer = document.getElementById('lock-timer');
+  const error = document.getElementById('login-error');
+  let timeLeft = lockSeconds;
+
+  btn.disabled = true;
+  emailInput.disabled = true;
+  passwordInput.disabled = true;
+
+  timer.textContent = `🚫 សូមរង់ចាំ ${timeLeft} វិនាទី មុនចូលម្ដងទៀត។`;
+  error.textContent = '';
+
+  const lockInterval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      clearInterval(lockInterval);
+      btn.disabled = false;
+      emailInput.disabled = false;
+      passwordInput.disabled = false;
+      timer.textContent = '';
+      loginAttempts = 0;
     } else {
-      document.getElementById('login-section').classList.remove('hidden');
-      document.getElementById('app-section').classList.add('hidden');
+      timer.textContent = `🚫 សូមរង់ចាំ ${timeLeft} វិនាទី មុនចូលម្ដងទៀត។`;
+    }
+  }, 1000);
+}
+
+async function login() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const error = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+
+  if (!email || !password) {
+    error.textContent = 'សូមបញ្ចូលអ៊ីម៉ែល និងពាក្យសម្ងាត់';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ កំពុងចូល...';
+  error.textContent = '';
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    loginAttempts = 0;
+  } catch (e) {
+    loginAttempts++;
+    if (loginAttempts >= maxLoginAttempts) {
+      lockLogin();
+      error.textContent = '🚫 អ្នកបានចូលខុស ៥ ដង សូមរង់ចាំមុនព្យាយាមម្តងទៀត';
+    } else {
+      error.textContent = e.code === 'auth/invalid-email' ? 'អ៊ីម៉ែលមិនត្រឹមត្រូវ'
+        : (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found')
+          ? 'អ៊ីម៉ែល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ'
+          : 'អ៊ីម៉ែល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ';
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔐 ចូល';
+  }
+}
+
+async function register() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+
+  if (!email || !password) {
+    alert('សូមបញ្ចូលអ៊ីម៉ែល និងពាក្យសម្ងាត់');
+    return;
+  }
+
+  try {
+    await auth.createUserWithEmailAndPassword(email, password);
+    alert('✅ បានបង្កើតគណនី! សូមចូលម្តងទៀត');
+  } catch (e) {
+    alert('បញ្ហា: ' + e.message);
+  }
+}
+
+function logout() {
+  auth.signOut().then(() => location.reload());
+}
+
+// ===== Invoice Section =====
+function resetForm() {
+  document.getElementById('invoice-form').reset();
+  document.getElementById('customer-name').value = '';
+  document.getElementById('customer-phone').value = '';
+}
+
+function validateInvoiceForm() {
+  const month = document.getElementById('month').value;
+  const room = document.getElementById('room').value;
+  const waterOld = document.getElementById('water-old').value;
+  const waterNew = document.getElementById('water-new').value;
+  const electricOld = document.getElementById('electric-old').value;
+  const electricNew = document.getElementById('electric-new').value;
+
+  if (!month || !room) {
+    alert('សូមជ្រើសខែ និង បន្ទប់');
+    return false;
+  }
+  if (waterOld === '' || waterOld < 0) {
+    alert('សូមបញ្ចូលទឹកចាស់ត្រឹមត្រូវ');
+    return false;
+  }
+  if (waterNew === '' || waterNew < waterOld) {
+    alert('ទឹកថ្មីត្រូវធំជាងទឹកចាស់');
+    return false;
+  }
+  if (electricOld === '' || electricOld < 0) {
+    alert('សូមបញ្ចូលភ្លើងចាស់ត្រឹមត្រូវ');
+    return false;
+  }
+  if (electricNew === '' || electricNew < electricOld) {
+    alert('ភ្លើងថ្មីត្រូវធំជាងចាស់');
+    return false;
+  }
+
+  return true;
+}
+
+async function saveData() {
+  if (!validateInvoiceForm()) return;
+
+  const month = document.getElementById('month').value;
+  const room = document.getElementById('room').value;
+  const waterOld = Number(document.getElementById('water-old').value);
+  const waterNew = Number(document.getElementById('water-new').value);
+  const electricOld = Number(document.getElementById('electric-old').value);
+  const electricNew = Number(document.getElementById('electric-new').value);
+  const customerName = document.getElementById('customer-name').value;
+  const customerPhone = document.getElementById('customer-phone').value;
+  const invoiceId = `${month}-${room}`;
+
+  try {
+    showLoading(true);
+    await db.collection('invoices').doc(invoiceId).set({
+      month, room, waterOld, waterNew, electricOld, electricNew,
+      customerName, customerPhone,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+      alert('✅ បានរក្សាទុកវិក្កយបត្រ');
+    resetForm();
+
+    loadData();
+  } catch (e) {
+    alert('មានបញ្ហា: ' + e.message);
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function loadData() {
+  const tbody = document.getElementById('history-tbody');
+  tbody.innerHTML = `<tr><td colspan="6">⏳ កំពុងផ្ទុកទិន្នន័យ...</td></tr>`;
+
+  const filterRoom = document.getElementById('filter-room').value;
+  const filterMonth = document.getElementById('filter-month').value;
+
+  let query = db.collection('invoices');
+  if (filterRoom) query = query.where('room', '==', filterRoom);
+  if (filterMonth) query = query.where('month', '==', filterMonth);
+
+  try {
+    const snapshot = await query.orderBy('timestamp', 'desc').get();
+    if (snapshot.empty) {
+      tbody.innerHTML = `<tr><td colspan="6">គ្មានវិក្កយបត្រ</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = '';
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const date = data.timestamp ? data.timestamp.toDate().toLocaleDateString() : '';
+      tbody.innerHTML += `
+        <tr>
+          <td>${doc.id}</td>
+          <td>${data.customerName || ''}</td>
+          <td>${data.room || ''}</td>
+          <td>${data.month || ''}</td>
+          <td>${date}</td>
+          <td><button class="btn btn-info btn-sm" onclick="showInvoice('${doc.id}')">មើល</button></td>
+        </tr>`;
+    });
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:red;">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function showInvoice(docId) {
+  try {
+    showLoading(true);
+    const doc = await db.collection('invoices').doc(docId).get();
+    if (!doc.exists) return alert('វិក្កយបត្រមិនមាន');
+
+    const data = doc.data();
+    document.getElementById('modal-content').textContent = `
+វិក្កយបត្រ៖ ${doc.id}
+អតិថិជន៖ ${data.customerName || ''}
+បន្ទប់៖ ${data.room || ''}
+ខែ៖ ${data.month || ''}
+ទឹកចាស់៖ ${data.waterOld || 0}
+ទឹកថ្មី៖ ${data.waterNew || 0}
+ភ្លើងចាស់៖ ${data.electricOld || 0}
+ភ្លើងថ្មី៖ ${data.electricNew || 0}
+ថ្ងៃបង្កើត៖ ${data.timestamp?.toDate().toLocaleString() || ''}
+    `;
+    openModal();
+  } catch (e) {
+    alert('មានបញ្ហា: ' + e.message);
+  } finally {
+    showLoading(false);
+  }
+}
+
+function openModal() {
+  document.getElementById('invoice-modal').style.display = 'block';
+}
+
+function closeModal() {
+  document.getElementById('invoice-modal').style.display = 'none';
+}
+
+function printModalContent() {
+  const content = document.getElementById('modal-content').textContent;
+  const win = window.open('', '', 'width=600,height=400');
+  win.document.write(`<pre style="font-family:'Khmer OS Battambang';font-size:16px;">${content}</pre>`);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.close();
+}
+
+// ===== Customer Section =====
+async function autoFillCustomerInfo() {
+  const room = document.getElementById('room').value;
+  if (!room) {
+    document.getElementById('customer-name').value = '';
+    document.getElementById('customer-phone').value = '';
+    return;
+  }
+
+  try {
+    const snapshot = await db.collection('customers').where('room', '==', room).limit(1).get();
+    if (!snapshot.empty) {
+      const data = snapshot.docs[0].data();
+      document.getElementById('customer-name').value = data.name || '';
+      document.getElementById('customer-phone').value = data.phone || '';
+    } else {
+      document.getElementById('customer-name').value = '';
+      document.getElementById('customer-phone').value = '';
+    }
+  } catch (e) {
+    console.error('Error loading customer:', e);
+  }
+}
+
+async function loadCustomerInfo() {
+  const room = document.getElementById('edit-room').value;
+  if (!room) {
+    clearEditCustomerForm();
+    return;
+  }
+  try {
+    const snapshot = await db.collection('customers').where('room', '==', room).limit(1).get();
+    if (!snapshot.empty) {
+      const data = snapshot.docs[0].data();
+      document.getElementById('edit-customer-name').value = data.name || '';
+      document.getElementById('edit-customer-phone').value = data.phone || '';
+    } else {
+      clearEditCustomerForm();
+    }
+  } catch (e) {
+    console.error('Error loading customer info:', e);
+  }
+}
+
+function clearEditCustomerForm() {
+  document.getElementById('edit-customer-name').value = '';
+  document.getElementById('edit-customer-phone').value = '';
+}
+
+async function updateCustomer() {
+  const room = document.getElementById('edit-room').value;
+  const name = document.getElementById('edit-customer-name').value.trim();
+  const phone = document.getElementById('edit-customer-phone').value.trim();
+
+  if (!room) {
+    alert('សូមជ្រើសបន្ទប់');
+    return;
+  }
+  if (!name || !phone) {
+    alert('សូមបញ្ចូលឈ្មោះ និងលេខទូរស័ព្ទ');
+    return;
+  }
+
+  const btn = document.getElementById('save-customer-btn');
+  const spinner = document.getElementById('save-spinner');
+  const btnText = document.getElementById('save-btn-text');
+
+  btn.disabled = true;
+  spinner.classList.remove('d-none');
+  btnText.textContent = 'កំពុងរក្សាទុក...';
+
+  try {
+    // Save by document ID = room number (overwrite if exists)
+    await db.collection('customers').doc(room).set({ room, name, phone });
+
+    loadCustomerList();
+  } catch (e) {
+    alert('មានបញ្ហា: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    spinner.classList.add('d-none');
+    btnText.textContent = '💾 បញ្ចូល / កែប្រែ';
+  }
+}
+
+async function loadCustomerList() {
+  // បង្ហាញផ្ទាំង edit-customer-card ប្រសិនបើលាក់
+  const editCustomerCard = document.getElementById('edit-customer-card');
+  if (editCustomerCard.style.display === 'none' || editCustomerCard.style.display === '') {
+    editCustomerCard.style.display = 'block';
+  }
+
+  const tbody = document.getElementById('customer-table-body');
+  tbody.innerHTML = '<tr><td colspan="4">⏳ កំពុងផ្ទុក...</td></tr>';
+
+  try {
+    const snapshot = await db.collection('customers').orderBy('room').get();
+    if (snapshot.empty) {
+      tbody.innerHTML = '<tr><td colspan="4">គ្មានអតិថិជន</td></tr>';
+      document.getElementById('filter-message').style.display = 'none';
+      return;
+    }
+
+    tbody.innerHTML = '';
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      tbody.innerHTML += `
+      <tr>
+        <td>${data.room}</td>
+        <td>${data.name}</td>
+        <td>${data.phone}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="deleteCustomer('${doc.id}')">លុប</button>
+        </td>
+      </tr>`;
+    });
+
+    filterByRoomSelect();
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Error: ${e.message}</td></tr>`;
+    document.getElementById('filter-message').style.display = 'none';
+  }
+}
+
+
+
+function filterByRoomSelect() {
+  const selectedRoom = document.getElementById('filter-room-select').value;
+  const tbody = document.getElementById('customer-table-body');
+  const rows = tbody.querySelectorAll('tr');
+  const filterMessage = document.getElementById('filter-message');
+
+  let visibleCount = 0;
+
+  rows.forEach(row => {
+    // Ignore rows without enough columns (like loading or error message)
+    if (row.children.length < 3) return;
+
+    const roomCell = row.children[0].textContent.trim();
+
+    if (selectedRoom === '' || roomCell === selectedRoom) {
+      row.style.display = '';
+      visibleCount++;
+    } else {
+      row.style.display = 'none';
     }
   });
 
-  // Login
-  function login() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const msg = document.getElementById('login-msg');
-    msg.textContent = '';
-
-    if (!email || !password) {
-      msg.textContent = 'សូមបញ្ចូលអ៊ីម៉ែល និង ពាក្យសម្ងាត់';
-      return;
-    }
-
-    auth.signInWithEmailAndPassword(email, password)
-      .then(() => {
-        msg.textContent = '';
-      })
-      .catch(err => {
-        msg.textContent = 'កំហុសចូល: ' + err.message;
-      });
+  // Show "គ្នាន" message if no rows visible after filter
+  if (visibleCount === 0) {
+    filterMessage.style.display = 'block';
+  } else {
+    filterMessage.style.display = 'none';
   }
+}
 
-  // Register
-  function register() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const msg = document.getElementById('login-msg');
-    msg.textContent = '';
 
-    if (!email || !password) {
-      msg.textContent = 'សូមបញ្ចូលអ៊ីម៉ែល និង ពាក្យសម្ងាត់';
-      return;
-    }
+async function deleteCustomer(docId) {
+  if (!confirm('តើអ្នកចង់លុបអតិថិជននេះមែនទេ?')) return;
 
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        msg.textContent = 'បានចុះឈ្មោះជោគជ័យ! សូមចូលប្រើ.';
-      })
-      .catch(err => {
-        msg.textContent = 'កំហុសចុះឈ្មោះ: ' + err.message;
-      });
+  try {
+    await db.collection('customers').doc(docId).delete();
+    alert('✅ លុបបានជោគជ័យ');
+    loadCustomerList();
+  } catch (e) {
+    alert('មានបញ្ហា: ' + e.message);
   }
+}
 
-  // Logout
-  function logout() {
-    auth.signOut();
-  }
+// ===== Auth State Listener =====
+auth.onAuthStateChanged(async user => {
+  const loginSection = document.getElementById('login-card');
+  const appSection = document.getElementById('form-card');
+  const userEmailDiv = document.getElementById('user-email');
 
-  // Generate invoice number
-  function generateInvoiceNumber(room, month) {
-    const ym = month.replace('-', '');
-    const randomSuffix = Math.floor(Math.random() * 900 + 100);
-    return `INV-${ym}-${room}-${randomSuffix}`;
-  }
-
-  // Save invoice
-  async function saveData() {
-    const room = document.getElementById('room').value;
-    const month = document.getElementById('month').value;
-    const waterOld = parseInt(document.getElementById('water-old').value);
-    const waterNew = parseInt(document.getElementById('water-new').value);
-    const electricOld = parseInt(document.getElementById('electric-old').value);
-    const electricNew = parseInt(document.getElementById('electric-new').value);
-    const customerName = document.getElementById('customer-name').value.trim();
-    const customerPhone = document.getElementById('customer-phone').value.trim();
-
-    if (!room || !month || isNaN(waterOld) || isNaN(waterNew) || isNaN(electricOld) || isNaN(electricNew) || !customerName || !customerPhone) {
-      alert('សូមបំពេញទិន្នន័យទាំងអស់');
-      return;
-    }
-
-    const invoiceNo = generateInvoiceNumber(room, month);
+  if (user) {
+    loginSection.style.display = 'none';
+    appSection.style.display = 'block';
+    userEmailDiv.textContent = user.email;
 
     try {
-      await db.collection('invoices').doc(invoiceNo).set({
-        room,
-        month,
-        waterOld,
-        waterNew,
-        electricOld,
-        electricNew,
-        customerName,
-        customerPhone,
-        invoiceNo,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      alert('✅ បានរក្សាទុកទៅ Firebase!');
-      loadData();
-      clearForm();
-    } catch (error) {
-      alert('❌ កំហុស: ' + error.message);
+      // ព្យាយាម Enable Firebase Network នៅពេល user login
+      await firebase.firestore().enableNetwork();
+    } catch (e) {
+      console.error('Enable network error:', e.message);
     }
-  }
 
-  // Load invoice history with filter
-  async function loadData() {
-    const tbody = document.getElementById('history-tbody');
-    tbody.innerHTML = '';
-    const filterRoom = document.getElementById('filter-room').value;
-
-    let query = db.collection('invoices').orderBy('timestamp', 'desc');
-
-    if (filterRoom) {
-      query = query.where('room', '==', filterRoom);
-    }
+    toggleView('form');
+  } else {
+    loginSection.style.display = 'block';
+    appSection.style.display = 'none';
 
     try {
-      const snapshot = await query.get();
-      if (snapshot.empty) {
-        tbody.innerHTML = `<tr><td colspan="6">មិនមានទិន្នន័យ</td></tr>`;
-        return;
-      }
-
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const date = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleString('km-KH') : '';
-        const row = document.createElement('tr');
-
-        row.innerHTML = `
-          <td>${d.invoiceNo}</td>
-          <td>${d.customerName}</td>
-          <td>${d.room}</td>
-          <td>${d.month}</td>
-          <td>${date}</td>
-          <td><button onclick="printOldInvoice('${doc.id}')">🖨️ បោះពុម្ព</button></td>
-        `;
-        tbody.appendChild(row);
-      });
-    } catch (error) {
-      alert('❌ កំហុសក្នុងការទាញទិន្នន័យ: ' + error.message);
+      // បើ user logout ឬ disconnected, បិទ Network Firebase
+      await firebase.firestore().disableNetwork();
+    } catch (e) {
+      console.error('Disable network error:', e.message);
     }
   }
+});
 
-  // Clear input form
-  function clearForm() {
-    document.getElementById('room').value = '';
-    document.getElementById('month').value = '';
-    document.getElementById('water-old').value = '';
-    document.getElementById('water-new').value = '';
-    document.getElementById('electric-old').value = '';
-    document.getElementById('electric-new').value = '';
-    document.getElementById('customer-name').value = '';
-    document.getElementById('customer-phone').value = '';
-  }
 
-  // Print old invoice
-  async function printOldInvoice(docId) {
-    try {
-      const doc = await db.collection('invoices').doc(docId).get();
-      if (!doc.exists) {
-        alert('មិនឃើញវិក្កយបត្រនេះ!');
-        return;
-      }
-      const d = doc.data();
+// ===== Initialization =====
+document.getElementById('toggle-eye').addEventListener('click', togglePassword);
+document.getElementById('login-btn').addEventListener('click', login);
+document.querySelector('button[onclick="register()"]').addEventListener('click', register);
 
-      const waterPrice = parseInt(document.getElementById('water-price').value) || 0;
-      const electricPrice = parseInt(document.getElementById('electric-price').value) || 0;
+document.getElementById('save-btn').addEventListener('click', e => { e.preventDefault(); saveData(); });
+document.getElementById('reset-invoice-btn')?.addEventListener('click', resetForm);
 
-      const waterUsed = d.waterNew - d.waterOld;
-      const electricUsed = d.electricNew - d.electricOld;
-      const waterCost = waterUsed * waterPrice;
-      const electricCost = electricUsed * electricPrice;
-      const total = waterCost + electricCost;
+document.getElementById('filter-room').addEventListener('change', loadData);
+document.getElementById('filter-month').addEventListener('change', loadData);
 
-      const printContent = `
-        <style>
-          body { font-family: 'Khmer OS Battambang', sans-serif; margin: 20px; background: #f5f7fa; color: #333; }
-          h1 { text-align: center; color: #1e88e5; margin-bottom: 10px; }
-          p { margin: 3px 0; font-size: 14px; }
-          table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 15px; }
-          th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-          th { background-color: #1e88e5; color: white; }
-          .total { font-weight: bold; background-color: #e3f2fd; }
-          .grand-total { font-weight: bold; text-align: right; margin-top: 20px; font-size: 16px; color: #2e7d32; }
-        </style>
+document.getElementById('room').addEventListener('change', autoFillCustomerInfo);
+document.getElementById('edit-room').addEventListener('change', loadCustomerInfo);
 
-        <h1>វិក្កយបត្រ ទឹក-ភ្លើង</h1>
-        <p><strong>លេខវិក្កយបត្រ:</strong> ${d.invoiceNo}</p>
-        <p><strong>បន្ទប់:</strong> ${d.room} | <strong>ខែ:</strong> ${d.month}</p>
-        <p><strong>អតិថិជន:</strong> ${d.customerName}</p>
-        <p><strong>លេខទូរស័ព្ទ:</strong> ${d.customerPhone}</p>
+document.getElementById('save-customer-btn').addEventListener('click', updateCustomer);
 
-        <table>
-          <thead>
-            <tr><th>ចាស់</th><th>ថ្មី</th><th>ប្រើ</th><th>តម្លៃ</th><th>ថ្លៃ</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${d.waterOld}</td>
-              <td>${d.waterNew}</td>
-              <td>${waterUsed}</td>
-              <td>${waterPrice.toLocaleString()}</td>
-              <td>${waterCost.toLocaleString()} រៀល</td>
-            </tr>
-            <tr class="total">
-              <td colspan="4">សរុបទឹក</td>
-              <td>${waterCost.toLocaleString()} រៀល</td>
-            </tr>
-          </tbody>
-        </table>
 
-        <table>
-          <thead>
-            <tr><th>ចាស់</th><th>ថ្មី</th><th>ប្រើ</th><th>តម្លៃ</th><th>ថ្លៃ</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${d.electricOld}</td>
-              <td>${d.electricNew}</td>
-              <td>${electricUsed}</td>
-              <td>${electricPrice.toLocaleString()}</td>
-              <td>${electricCost.toLocaleString()} រៀល</td>
-            </tr>
-            <tr class="total">
-              <td colspan="4">សរុបភ្លើង</td>
-              <td>${electricCost.toLocaleString()} រៀល</td>
-            </tr>
-          </tbody>
-        </table>
 
-        <p class="grand-total">សរុបចុងក្រោយ: ${total.toLocaleString()} រៀល</p>
-      `;
 
-      const win = window.open('', '', 'width=800,height=900');
-      win.document.write(`
-        <html>
-          <head>
-            <title>Print Invoice</title>
-            <style>@media print {
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              th { background-color: #1e88e5 !important; color: white !important; }
-              .total { background-color: #e3f2fd !important; }
-              .grand-total { color: #2e7d32 !important; }
-            }</style>
-          </head>
-          <body onload="window.print(); window.close();">${printContent}</body>
-        </html>
-      `);
-      win.document.close();
 
-    } catch (error) {
-      alert('កំហុសក្នុងការទាញ និងបោះពុម្ព: ' + error.message);
-    }
-  }
+
+
+
 </script>
+
+
+
+
+
+
+
 
 </body>
 </html>
